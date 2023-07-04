@@ -1,6 +1,8 @@
 package adapter
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
 	"io"
 	"log"
@@ -20,6 +22,16 @@ func BytesToType[T any](b []byte) (*T, error) {
 	var out T
 	err := jsonpkg.Unmarshal(b, &out)
 	return &out, err
+}
+
+func TypeToBytes[T any](t T) ([]byte, error) {
+	var b bytes.Buffer
+	enc := gob.NewEncoder(&b)
+	err := enc.Encode(t)
+	if err != nil {
+		return nil, err
+	}
+	return b.Bytes(), nil
 }
 
 func BodyToType[T any](b io.ReadCloser) (*T, error) {

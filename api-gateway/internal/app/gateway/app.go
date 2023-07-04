@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/apigateway/module/auth"
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/apigateway/module/content"
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/apigateway/module/user"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/auth"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/content"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/user"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/constant"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/middleware"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/router"

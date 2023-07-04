@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/apigateway/module/content"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/content"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/constant"
 
 	"github.com/go-chi/chi"

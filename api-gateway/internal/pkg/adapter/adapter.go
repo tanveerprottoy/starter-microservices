@@ -3,7 +3,7 @@ package adapter
 import (
 	"database/sql"
 
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/apigateway/module/user/entity"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/user/entity"
 	sqlpkg "github.com/tanveerprottoy/starter-microservices/gateway/pkg/data/sql"
 )
 

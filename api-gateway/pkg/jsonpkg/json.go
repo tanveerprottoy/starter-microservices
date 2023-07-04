@@ -1,6 +1,7 @@
 package jsonpkg
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 )
@@ -19,4 +20,10 @@ func Encode(w io.Writer, v any) error {
 
 func Decode(r io.Reader, v any) error {
 	return json.NewDecoder(r).Decode(&v)
+}
+
+func EncodeWithEncoder(v any) (bytes.Buffer, error) {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(v)
+	return buf, err
 }

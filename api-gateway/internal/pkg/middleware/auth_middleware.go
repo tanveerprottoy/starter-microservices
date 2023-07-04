@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/apigateway/module/auth"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/auth"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/constant"
 )
 

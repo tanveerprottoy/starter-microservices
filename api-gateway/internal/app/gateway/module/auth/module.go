@@ -1,13 +1,13 @@
 package auth
 
-import "github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/user/service"
+import "github.com/tanveerprottoy/starter-microservices/gateway/pkg/httppkg"
 
 type Module struct {
 	Service *Service
 }
 
-func NewModule(s *Service) *Module {
+func NewModule(c *httppkg.HTTPClient) *Module {
 	m := new(Module)
-	m.Service = NewService(s)
+	m.Service = NewService(c)
 	return m
 }

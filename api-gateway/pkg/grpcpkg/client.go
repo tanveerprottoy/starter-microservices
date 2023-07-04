@@ -3,7 +3,7 @@ package grpcpkg
 import (
 	"log"
 
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/apigateway/module/user/proto"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/gateway/module/user/proto"
 	"google.golang.org/grpc"
 )
 
