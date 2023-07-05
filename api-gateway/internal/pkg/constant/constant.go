@@ -24,4 +24,4 @@ const KeyLimit = "limit"
 
 // remote userservice auth endpoint
 const UserServiceAuthEndpoint = "/api/v1/auth/authorize"
-const UserServiceCreateEndpoint = "/api/v1/users"
+const UsersEndpoint = "/api/v1/users"

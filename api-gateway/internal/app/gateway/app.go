@@ -8,6 +8,7 @@ import (
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/auth"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/user"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/constant"
+	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/global"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/middleware"
 	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/router"
 	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/config"
@@ -19,10 +20,6 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	// "go.uber.org/zap"
-)
-
-var (
-	UserServiceBaseUrl string
 )
 
 // App struct
@@ -44,7 +41,7 @@ func NewApp() *App {
 }
 
 func (a *App) getConfigValues() {
-	UserServiceBaseUrl = config.GetEnvValue("USER_SERVICE_BASE_URL")
+	global.UserServiceBaseUrl = config.GetEnvValue("USER_SERVICE_BASE_URL")
 }
 
 func (a *App) initDB() {
