@@ -3,10 +3,9 @@ package jwtpkg
 import (
 	"errors"
 
-	"github.com/tanveerprottoy/starter-go/stdlib/pkg/config"
-	"github.com/tanveerprottoy/starter-go/stdlib/pkg/timepkg"
-
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/tanveerprottoy/starter-microservices/service/pkg/config"
+	"github.com/tanveerprottoy/starter-microservices/service/pkg/timepkg"
 )
 
 // Create the JWT key used to create the signature

@@ -1,145 +1,132 @@
 package content
 
 import (
-	"errors"
-	"net/http"
+	"context"
+	"fmt"
+	"log"
 	"time"
 
-	"github.com/tanveerprottoy/starter-go/stdlib/internal/app/module/content/entity"
-	"github.com/tanveerprottoy/starter-go/stdlib/internal/pkg/constant"
-	"github.com/tanveerprottoy/starter-go/stdlib/pkg/adapter"
-	sqlPkg "github.com/tanveerprottoy/starter-go/stdlib/pkg/data/sql"
-	"github.com/tanveerprottoy/starter-go/stdlib/pkg/response"
-
-	"github.com/go-chi/chi"
+	"github.com/tanveerprottoy/starter-microservices/service/internal/pkg/constant"
+	"github.com/tanveerprottoy/starter-microservices/service/pkg/errorpkg"
+	"github.com/tanveerprottoy/starter-microservices/service/pkg/grpcpkg"
+	"google.golang.org/grpc/codes"
 )
 
 type Service struct {
 	repository *Repository
 }
 
-func NewService(
-	repository *Repository,
-) *Service {
+func NewService(r *Repository) *Service {
 	s := new(Service)
-	s.repository = repository
+	s.repository = r
 	return s
 }
 
-func (s *Service) Create(p []byte, w http.ResponseWriter, r *http.Request) {
-	d, err := adapter.BytesToType[entity.Content](p)
+func (s *Service) Create(u *proto.Content, ctx context.Context) (*proto.User, errorpkg.GRPCError) {
+	res, err := s.repository.Create(
+		ctx,
+		u,
+	)
 	if err != nil {
-		response.RespondError(http.StatusBadRequest, err, w)
-		return
+		return nil,  grpcpkg.RespondError(codes.Unknown, constant.UnknownError)
 	}
-	d.CreatedAt = time.Now()
-	d.UpdatedAt = time.Now()
-	err = s.repository.Create(d)
-	if err != nil {
-		response.RespondError(
-			http.StatusInternalServerError,
-			errors.New(constant.InternalServerError),
-			w,
-		)
-		return
-	}
-	response.Respond(http.StatusCreated, d, w)
+	fmt.Println("create.res: ", res)
+	return u, nil
 }
 
-func (s *Service) ReadMany(limit, page int, w http.ResponseWriter, r *http.Request) {
+func (s *Service) ReadMany(ctx context.Context, v *proto.VoidParam) (*proto.Users, error) {
+	opts := mongodb.BuildPaginatedOpts(limit, skip)
+	c, err := s.repository.ReadMany(
+		r.Context(),
+		bson.D{},
+		&opts,
+	)
+	log.Print("ReadMany rpc")
+	d := &proto.Users{}
 	rows, err := s.repository.ReadMany()
 	if err != nil {
-		response.RespondError(
-			http.StatusInternalServerError,
-			err,
-			w,
-		)
-		return
+		return nil, grpcpkg.RespondError(codes.Unknown, constant.UnknownError)
 	}
-	var e entity.Content
-	d, err := sqlPkg.GetEntities(
-		rows,
-		&e,
-		&e.Id,
-		&e.Name,
-		&e.CreatedAt,
-		&e.UpdatedAt,
+	var (
+		users      []*proto.User
+		id         string
+		name       string
+		created_at time.Time
+		updated_at time.Time
 	)
-	if err != nil {
-		response.RespondError(
-			http.StatusInternalServerError,
-			err,
-			w,
-		)
-		return
+	// Loop through rows, using Scan to assign column data to struct fields.
+	for rows.Next() {
+		if err := rows.Scan(&id, &name, &created_at, &updated_at); err != nil {
+			return nil, fmt.Errorf("ReadMany %v", err)
+		}
+		users = append(users, &proto.User{
+			Id:   id,
+			Name: name,
+			CreatedAt: timestamppb.New(
+				created_at,
+			),
+			UpdatedAt: timestamppb.New(
+				updated_at,
+			),
+		})
 	}
-	response.Respond(http.StatusOK, d, w)
+	d.Users = users
+	return d, err
 }
 
-func (s *Service) ReadOne(id string, w http.ResponseWriter, r *http.Request) {
-	row := s.repository.ReadOne(id)
+/* func (s *Service) ReadUserStream(
+	v *proto.VoidParam,
+	serv proto.ServiceRPC_ReadUserStreamServer,
+) (*proto.Users, error) {
+	return &proto.Users{}, nil
+} */
+
+func (s *Service) ReadOne(ctx context.Context, strVal *wrapperspb.StringValue) (*proto.User, error) {
+	row := s.repository.ReadOne(
+		strVal.Value,
+	)
 	if row == nil {
-		response.RespondError(
-			http.StatusInternalServerError,
-			errors.New(constant.InternalServerError),
-			w,
-		)
-		return
+		return nil, grpcpkg.RespondError(codes.NotFound, constantglobal.NotFound)
 	}
-	e := new(entity.Content)
-	d, err := sqlPkg.GetEntity(
-		row,
-		&e,
-		&e.Id,
-		&e.Name,
-		&e.CreatedAt,
-		&e.UpdatedAt,
+	var (
+		id         string
+		name       string
+		created_at time.Time
+		updated_at time.Time
 	)
-	if err != nil {
-		response.RespondError(
-			http.StatusInternalServerError,
-			err,
-			w,
-		)
-		return
+	if err := row.Scan(&id, &name, &created_at, &updated_at); err != nil {
+		return nil, fmt.Errorf("ReadOne %v", err)
 	}
-	response.Respond(http.StatusOK, d, w)
+	u := &proto.User{
+		Id:   id,
+		Name: name,
+		CreatedAt: timestamppb.New(
+			created_at,
+		),
+		UpdatedAt: timestamppb.New(
+			updated_at,
+		),
+	}
+	return u, nil
 }
 
-func (s *Service) Update(id string, p []byte, w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, constant.KeyId)
-	d, err := adapter.BytesToType[entity.Content](p)
-	if err != nil {
-		response.RespondError(http.StatusBadRequest, err, w)
-		return
+func (s *Service) Update(ctx context.Context, p *proto.UpdateUserParam) (*proto.User, error) {
+	r, err := s.repository.Update(
+		p.Id,
+		p.User,
+	)
+	if err != nil || r <= 0 {
+		return nil, grpcpkg.RespondError(codes.Unknown, constant.UnknownError)
 	}
-	d.CreatedAt = time.Now()
-	d.UpdatedAt = time.Now()
-	rowsAffected, err := s.repository.Update(userId, d)
-	if err != nil || rowsAffected <= 0 {
-		response.RespondError(
-			http.StatusInternalServerError,
-			errors.New(constant.InternalServerError),
-			w,
-		)
-		return
-	}
-	response.Respond(http.StatusOK, d, w)
+	return p.User, nil
 }
 
-func (s *Service) Delete(id string, w http.ResponseWriter, r *http.Request) {
-	rowsAffected, err := s.repository.Delete(id)
-	if err != nil || rowsAffected <= 0 {
-		response.RespondError(
-			http.StatusInternalServerError,
-			errors.New(constant.InternalServerError),
-			w,
-		)
-		return
-	}
-	response.Respond(
-		http.StatusOK,
-		map[string]bool{"success": true},
-		w,
+func (s *Service) Delete(ctx context.Context, strVal *wrapperspb.StringValue) (*wrapperspb.BoolValue, error) {
+	r, err := s.repository.Delete(
+		strVal.Value,
 	)
+	if err != nil || r <= 0 {
+		return nil, grpcpkg.RespondError(codes.Unknown, constant.UnknownError)
+	}
+	return &wrapperspb.BoolValue{Value: true}, nil
 }

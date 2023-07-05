@@ -1,21 +1,19 @@
 package content
 
-import (
-	"database/sql"
-)
+import "github.com/jmoiron/sqlx"
 
 type Module struct {
-	Handler    *Handler
+	RPC        *RPC
 	Service    *Service
 	Repository *Repository
 }
 
-func NewModule(db *sql.DB) *Module {
+func NewModule(db *sqlx.DB) *Module {
 	m := new(Module)
 	// init order is reversed of the field decleration
 	// as the dependency is served this way
 	m.Repository = NewRepository(db)
 	m.Service = NewService(m.Repository)
-	m.Handler = NewHandler(m.Service)
+	m.RPC = NewRPC(m.Service)
 	return m
 }

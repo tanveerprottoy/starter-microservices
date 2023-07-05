@@ -1,78 +1,40 @@
 package content
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/tanveerprottoy/starter-go/stdlib/internal/app/module/content/entity"
-	sqlUtil "github.com/tanveerprottoy/starter-go/stdlib/pkg/data/sql"
+	"github.com/tanveerprottoy/starter-microservices/service/internal/pkg/constant"
+	"github.com/tanveerprottoy/starter-microservices/service/pkg/data/nosql/mongodb"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Repository struct {
-	db *sql.DB
+	db *mongo.Database
 }
 
-func NewRepository(db *sql.DB) *Repository {
+func NewRepository(db *mongo.Database) *Repository {
 	r := new(Repository)
 	r.db = db
 	return r
 }
 
-func (r *Repository) Create(e *entity.Content) error {
-	_, err := r.db.Exec(
-		"INSERT INTO contents (name)"+
-			"VALUES ($1)",
-		e.Name,
-	)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	return nil
+func (r *Repository) Create(ctx context.Context, doc any, opts ...*options.InsertOneOptions) (*mongo.InsertOneResult, error) {
+	return mongodb.InsertOne(r.db, constant.UsersCollection, ctx, doc, opts...)
 }
 
-func (r *Repository) ReadMany() (*sql.Rows, error) {
-	rows, err := r.db.Query(
-		"SELECT * FROM contents", // WHERE id IS NOT NULL
-	)
-	if err != nil {
-		return nil, fmt.Errorf("ReadMany %v", err)
-	}
-	return rows, nil
+func (r *Repository) ReadMany(ctx context.Context, filter any, opts ...*options.FindOptions) (*mongo.Cursor, error) {
+	return mongodb.Find(r.db, constant.UsersCollection, ctx, filter, opts...)
 }
 
-func (r *Repository) ReadOne(id string) *sql.Row {
-	row := r.db.QueryRow(
-		"SELECT * FROM contents WHERE id = $1 LIMIT 1",
-		id,
-	)
-	return row
+func (r *Repository) ReadOne(ctx context.Context, filter any, opts ...*options.FindOneOptions) *mongo.SingleResult {
+	return mongodb.FindOne(r.db, constant.UsersCollection, ctx, filter, opts...)
 }
 
-func (r *Repository) Update(id string, e *entity.Content) (int64, error) {
-	q := "UPDATE contents SET name = $2 WHERE id = $1"
-	res, err := r.db.Exec(
-		q,
-		id,
-		e.Name,
-	)
-	if err != nil {
-		log.Println(err)
-		return -1, err
-	}
-	return sqlUtil.GetRowsAffected(res), nil
+func (r *Repository) Update(ctx context.Context, filter any, doc any, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	return mongodb.UpdateOne(r.db, constant.UsersCollection, ctx, filter, doc, opts...)
 }
 
-func (r *Repository) Delete(id string) (int64, error) {
-	q := "DELETE FROM contents WHERE id = $1"
-	res, err := r.db.Exec(
-		q,
-		id,
-	)
-	if err != nil {
-		log.Println(err)
-		return -1, err
-	}
-	return sqlUtil.GetRowsAffected(res), nil
+func (r *Repository) Delete(ctx context.Context, filter any, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
+	return mongodb.DeleteOne(r.db, constant.UsersCollection, ctx, filter, opts...)
 }

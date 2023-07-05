@@ -1,28 +1,26 @@
-package gateway
+package userservice
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
-
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/auth"
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/app/gateway/module/user"
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/constant"
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/middleware"
-	"github.com/tanveerprottoy/starter-microservices/gateway/internal/pkg/router"
-	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/config"
-	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/cryptopkg"
-	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/data/nosql/mongodb"
-	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/data/sql/postgres"
-	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/file"
-	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/validatorpkg"
+	"os/exec"
+	"sync"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/tanveerprottoy/starter-go/stdlib/internal/app/contentservice/module/content"
+	"github.com/tanveerprottoy/starter-go/stdlib/internal/app/userservice/module/auth"
+	"github.com/tanveerprottoy/starter-go/stdlib/internal/app/userservice/module/user"
+	"github.com/tanveerprottoy/starter-go/stdlib/internal/pkg/constant"
+	"github.com/tanveerprottoy/starter-go/stdlib/internal/pkg/middleware"
+	"github.com/tanveerprottoy/starter-go/stdlib/internal/pkg/router"
+	"github.com/tanveerprottoy/starter-go/stdlib/pkg/cryptopkg"
+	"github.com/tanveerprottoy/starter-go/stdlib/pkg/data/nosql/mongodb"
+	"github.com/tanveerprottoy/starter-go/stdlib/pkg/data/sql/postgres"
+	"github.com/tanveerprottoy/starter-go/stdlib/pkg/file"
+	"github.com/tanveerprottoy/starter-go/stdlib/pkg/validatorpkg"
 	// "go.uber.org/zap"
-)
-
-var (
-	UserServiceBaseUrl string
 )
 
 // App struct
@@ -31,20 +29,39 @@ type App struct {
 	PostgresDBClient *postgres.Client
 	router           *router.Router
 	Middlewares      []any
-	Validate         *validator.Validate
 	AuthModule       *auth.Module
 	UserModule       *user.Module
 	ContentModule    *content.Module
+	Validate         *validator.Validate
 }
 
 func NewApp() *App {
 	a := new(App)
+	// run db script
+	// will run in a goroutine, channel is be used
+	// to get the output, waitgroup is used to make
+	// sure it completes execution
+	var wg sync.WaitGroup
+	ch := make(chan string)
+	wg.Add(1)
+	go a.runScript(ch, &wg)
+	wg.Wait()
+	o := <-ch
+	fmt.Println(o)
 	a.initComponents()
 	return a
 }
 
-func (a *App) getConfigValues() {
-	UserServiceBaseUrl = config.GetEnvValue("USER_SERVICE_BASE_URL")
+func (a *App) runScript(ch chan string, wg *sync.WaitGroup) {
+	defer wg.Done()
+	// cmd, err := exec.Command("/bin/sh", "../../scripts/init_db.sh").Output()
+	// cmd, err := exec.Command("chmod +x ./scripts/init_db.sh").Output()
+	cmd, err := exec.Command("./scripts/init_db.sql").Output()
+	if err != nil {
+		fmt.Printf("error %s", err)
+	}
+	output := string(cmd)
+	ch <- output
 }
 
 func (a *App) initDB() {

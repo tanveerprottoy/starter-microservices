@@ -3,9 +3,8 @@ syntax = "proto3";
 package contentPackage;
 
 import "google/protobuf/wrappers.proto";
-import "google/protobuf/timestamp.proto";
 
-option go_package = "./internal/app/gateway/module/content/proto";
+option go_package = "./internal/app/contentservice/module/content/proto";
 
 message Content {
     string id = 1;

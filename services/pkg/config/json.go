@@ -3,8 +3,8 @@ package config
 import (
 	"log"
 
-	"github.com/tanveerprottoy/starter-go/stdlib/pkg/file"
-	"github.com/tanveerprottoy/starter-go/stdlib/pkg/jsonpkg"
+	"github.com/tanveerprottoy/starter-microservices/service/pkg/file"
+	"github.com/tanveerprottoy/starter-microservices/service/pkg/jsonpkg"
 )
 
 var (

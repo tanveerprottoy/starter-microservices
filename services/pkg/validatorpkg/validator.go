@@ -9,7 +9,6 @@ import (
 
 func NotEmpty(fl validator.FieldLevel) bool {
 	field := fl.Field()
-
 	switch field.Kind() {
 	case reflect.String:
 		return len(strings.TrimSpace(field.String())) > 0
