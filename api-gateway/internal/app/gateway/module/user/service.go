@@ -13,7 +13,6 @@ import (
 	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/errorpkg"
 	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/httppkg"
 	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/jsonpkg"
-	"github.com/tanveerprottoy/starter-microservices/gateway/pkg/timepkg"
 )
 
 type Service struct {
@@ -48,80 +47,92 @@ func (s Service) Create(d *dto.CreateUpdateUserDto, ctx context.Context) (entity
 }
 
 func (s Service) ReadMany(limit, page int, ctx context.Context) (dto.UsersRemoteResponse, *errorpkg.HTTPError) {
-	var d dto.RemoteResponse[dto.UsersRemoteResponse]
+	var r dto.RemoteResponse[dto.UsersRemoteResponse]
 	httpErr := &errorpkg.HTTPError{Code: http.StatusInternalServerError, Err: errorpkg.NewError(constant.InternalServerError)}
 	qMap := make(map[string]string)
 	qMap["limit"] = adapter.IntToString(limit)
 	qMap["page"] = adapter.IntToString(page)
-	u, err := httppkg.BuildURL(global.UserServiceBaseUrl, "", qMap)
+	u, err := httppkg.BuildURL(global.UserServiceBaseUrl+constant.UsersEndpoint, "", qMap)
 	if err != nil {
 		httpErr.Err = err
-		return d.Data, httpErr
+		return r.Data, httpErr
 	}
 	h := http.Header{}
 	h.Add("tmp", "d")
-	c, d, err := httppkg.Request[dto.RemoteResponse[dto.UsersRemoteResponse]](http.MethodGet, u, h, nil, s.HTTPClient)
+	c, r, err := httppkg.Request[dto.RemoteResponse[dto.UsersRemoteResponse]](http.MethodGet, u, h, nil, s.HTTPClient)
 	if err != nil {
 		httpErr.Err = err
-		return d.Data, httpErr
+		return r.Data, httpErr
 	}
 	if c != http.StatusOK {
 		httpErr.Err = err
-		return d.Data, httpErr
+		return r.Data, httpErr
 	}
-	return d.Data, nil
+	return r.Data, nil
 }
 
 func (s Service) ReadOne(id string, ctx context.Context) (entity.User, *errorpkg.HTTPError) {
-	var d entity.User
+	var r dto.RemoteResponse[entity.User]
 	httpErr := &errorpkg.HTTPError{Code: http.StatusInternalServerError, Err: errorpkg.NewError(constant.InternalServerError)}
-	u, err := httppkg.BuildURL(global.UserServiceBaseUrl, id, nil)
+	u, err := httppkg.BuildURL(global.UserServiceBaseUrl+constant.UsersEndpoint, id, nil)
 	if err != nil {
 		httpErr.Err = err
-		return d, httpErr
+		return r.Data, httpErr
 	}
 	h := http.Header{}
 	h.Add("tmp", "d")
-	c, d, err := httppkg.Request[dto.RemoteResponse[dt]](http.MethodGet, u, h, nil, s.HTTPClient)
+	c, r, err := httppkg.Request[dto.RemoteResponse[entity.User]](http.MethodGet, u, h, nil, s.HTTPClient)
 	if err != nil {
 		httpErr.Err = err
-		return d, httpErr
+		return r.Data, httpErr
 	}
 	if c != http.StatusOK {
 		httpErr.Err = err
-		return d, httpErr
+		return r.Data, httpErr
 	}
-	return d, nil
+	return r.Data, nil
 }
 
 func (s Service) Update(id string, d *dto.CreateUpdateUserDto, ctx context.Context) (entity.User, *errorpkg.HTTPError) {
-	b, err := s.readOneInternal(id)
+	var r dto.RemoteResponse[entity.User]
+	httpErr := &errorpkg.HTTPError{Code: http.StatusInternalServerError, Err: errorpkg.NewError(constant.InternalServerError)}
+	u, err := httppkg.BuildURL(global.UserServiceBaseUrl+constant.UsersEndpoint, id, nil)
 	if err != nil {
-		return b, errorpkg.HandleDBError(err)
+		httpErr.Err = err
+		return r.Data, httpErr
 	}
-	b.Name = d.Name
-	b.UpdatedAt = timepkg.NowUnixMilli()
-	rows, err := s.repository.Update(id, &b)
+	h := http.Header{}
+	h.Add("tmp", "d")
+	c, r, err := httppkg.Request[dto.RemoteResponse[entity.User]](http.MethodGet, u, h, nil, s.HTTPClient)
 	if err != nil {
-		return b, errorpkg.HandleDBError(err)
+		httpErr.Err = err
+		return r.Data, httpErr
 	}
-	if rows > 0 {
-		return b, nil
+	if c != http.StatusOK {
+		httpErr.Err = err
+		return r.Data, httpErr
 	}
-	return b, &errorpkg.HTTPError{Code: http.StatusBadRequest, Err: errorpkg.NewError(constant.OperationNotSuccess)}
+	return r.Data, nil
 }
 
 func (s Service) Delete(id string, ctx context.Context) (entity.User, *errorpkg.HTTPError) {
-	b, err := s.readOneInternal(id)
+	var r dto.RemoteResponse[entity.User]
+	httpErr := &errorpkg.HTTPError{Code: http.StatusInternalServerError, Err: errorpkg.NewError(constant.InternalServerError)}
+	u, err := httppkg.BuildURL(global.UserServiceBaseUrl+constant.UsersEndpoint, id, nil)
 	if err != nil {
-		return b, errorpkg.HandleDBError(err)
+		httpErr.Err = err
+		return r.Data, httpErr
 	}
-	rows, err := s.repository.Delete(id)
+	h := http.Header{}
+	h.Add("tmp", "d")
+	c, r, err := httppkg.Request[dto.RemoteResponse[entity.User]](http.MethodGet, u, h, nil, s.HTTPClient)
 	if err != nil {
-		return b, errorpkg.HandleDBError(err)
+		httpErr.Err = err
+		return r.Data, httpErr
 	}
-	if rows > 0 {
-		return b, nil
+	if c != http.StatusOK {
+		httpErr.Err = err
+		return r.Data, httpErr
 	}
-	return b, &errorpkg.HTTPError{Code: http.StatusBadRequest, Err: errorpkg.NewError(constant.OperationNotSuccess)}
+	return r.Data, nil
 }
